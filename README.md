@@ -55,7 +55,7 @@ submodule:
 
 ```git submodule add https://github.com/crater2150/awesome-modalbind.git modalbind ```
 
-Then, in your awesomerc.lua:
+Then, in your `rc.lua`:
 
 ```local modalbind = require("modalbind")```
 
