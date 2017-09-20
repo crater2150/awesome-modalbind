@@ -1,10 +1,10 @@
 # Modal keybindings for AwesomeWM
 
 modalbind allows you to create modal keybindings (similar to vim modes) in
-[awesome](https://awesomewm.org/). You define a table of bindings for a mode and
-create a normal binding to enter that mode.
+[awesome](https://awesomewm.org/). *modalbind requires awesome 4.0+*
 
-A mode table contains one table per binding, in the form
+To use it, you define a table of bindings for a mode and create a normal binding
+to enter that mode. A mode table contains one table per binding, in the form
 ```lua
 	{
 		key,        -- the key like for awful.key
