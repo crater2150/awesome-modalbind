@@ -115,10 +115,12 @@ end
 
 local function show_box(s, map, name)
 	modewibox.screen = s
-	local label = "<b>" .. name .. "</b>"
+	local label = "<big><b>" .. name .. "</b></big>"
 	if settings.show_options then
 		for _, mapping in ipairs(map) do
-			if mapping[1] ~= "onClose" then
+			if mapping[1] == "separator" then
+				label = label .. "\n\n<big>" .. mapping[2] .. "</big>\n"
+			elseif mapping[1] ~= "onClose" then
 				label = label .. "\n<b>" .. mapping[1] .. "</b>\t" .. (mapping[3] or "???")
 			end
 		end

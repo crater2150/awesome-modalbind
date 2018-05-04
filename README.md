@@ -13,16 +13,23 @@ to enter that mode. A mode table contains one table per binding, in the form
 	}
 ```
 
+Additionally, separator elements can be added to group the actions displayed in
+the popup. Just add a table like the following:
+```lua
+  {"separator", group_title } -- literal string "separator" is required.
+```
+
 An example mode for controlling mpd, entered by pressing <kbd>Mod</kbd> + <kbd>m</kbd>:
 
 ```lua
 local mpdmap = {
-	{"m", function() awful.util.spawn("mpc toggle") end, "Toggle" },
-	{"n", function() awful.util.spawn("mpc next") end,   "Next" },
-	{"N", function() awful.util.spawn("mpc prev") end,   "Prev" },
-	{"s", function() awful.util.spawn("mpd") end,        "start MPD" },
-	{"S", function() awful.util.spawn("mpd --kill") end, "kill MPD" },
-	{"g", function() awful.util.spawn("gmpc") end,       "GMPC" },
+	{ "s", function() awful.util.spawn("mpd") end,        "start MPD" },
+	{ "S", function() awful.util.spawn("mpd --kill") end, "kill MPD" },
+	{ "g", function() awful.util.spawn("gmpc") end,       "GMPC" },
+	{ "separator", "Playback" },
+	{ "m", function() awful.util.spawn("mpc toggle") end, "Toggle" },
+	{ "n", function() awful.util.spawn("mpc next") end,   "Next" },
+	{ "N", function() awful.util.spawn("mpc prev") end,   "Prev" },
 }
 
 -- in your keybindings:
