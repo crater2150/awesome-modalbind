@@ -82,7 +82,7 @@ local function update_settings()
 end
 
 
-local function ensure_init()
+function modalbind.init()
 	awful.screen.connect_for_each_screen(function(s)
 		modewidget[s] = wibox.widget.textbox()
 		modewidget[s]:set_align("left")
@@ -151,21 +151,21 @@ local function close_box()
 	hide_box();
 end
 
-local function call_key_if_present(keymap, key)
+local function call_key_if_present(keymap, key, args)
 	local callback = mapping_for(keymap,key)
-	if callback then callback[2]() end
+	if callback then callback[2](args) end
 end
 
-function modalbind.grab(keymap, name, stay_in_mode)
+function modalbind.grab(keymap, name, stay_in_mode, args)
 	if name then
 		show_box(mouse.screen, keymap, name)
 		nesting = nesting + 1
 	end
-	call_key_if_present(keymap, "onOpen")
+	call_key_if_present(keymap, "onOpen", args)
 
 	keygrabber.run(function(mod, key, event)
 		if key == "Escape" then
-			call_key_if_present(keymap, "onClose")
+			call_key_if_present(keymap, "onClose", args)
 			close_box()
 			return true
 		end
@@ -175,7 +175,7 @@ function modalbind.grab(keymap, name, stay_in_mode)
 		mapping = mapping_for(keymap, key)
 		if mapping then
 			keygrabber.stop()
-			mapping[2]()
+			mapping[2](args)
 			if stay_in_mode then
 				modalbind.grab(keymap, name, true)
 			else
@@ -242,9 +242,9 @@ function modalbind.set_location(horizontal, vertical)
 	if (horizontal ~= "left" and horizontal ~= "right" and horizontal ~= "center" and type(horizontal) ~= "number") then
 		return
 	end
-	
+
 	settings.x_position = horizontal
-	settings.y_position = vertical 
+	settings.y_position = vertical
 end
 
 ---  enable displaying bindings for current mode
@@ -257,5 +257,4 @@ function modalbind.hide_options()
 	settings.show_options = false
 end
 
-ensure_init()
 return modalbind
