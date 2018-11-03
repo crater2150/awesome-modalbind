@@ -79,7 +79,7 @@ numbers, in which case the positioning is absolute, or `"left" / "right" /
 the position is calculated based on the screen geometry and the wibox size.
 
 Combining relative and absolute positioning is possible, so you can have a wibox
-on the bottom at 123px from the left with `set_location(123, "bottom).
+on the bottom at 123px from the left with `set_location(123, "bottom")`.
 
 For convenience, there are additional methods for setting an offset in addition
 to a relative position, `set_x_offset(amount)` / `set_y_offset(amount)`. The
