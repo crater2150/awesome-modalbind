@@ -19,6 +19,12 @@ the popup. Just add a table like the following:
   {"separator", group_title } -- literal string "separator" is required.
 ```
 
+Then, bind a key to `modalbind.grab(mapping_table, "Some Title")`, to open the mode menu. `modalbind.grab` takes up to four parameters:
+1. the mapping table
+2. the mode name. Optional, if not set, no box will be shown.
+3. "Stay in mode", boolean. If true, awesome will stay in the input mode until escape is pressed.
+4. additional arguments passed on to functions in the mapping table, e.g. passing the client for `clientkeys` bindings.
+
 An example mode for controlling mpd, entered by pressing <kbd>Mod</kbd> + <kbd>m</kbd>:
 
 ```lua
@@ -34,6 +40,7 @@ local mpdmap = {
 
 -- in your keybindings:
 local modalbind = require("modalbind")
+modalbind.init()
 
 	...
 	awful.key({ modkey }, "m", function() modalbind.grab(mpdmap, "MPD", true) end),
@@ -64,7 +71,10 @@ submodule:
 
 Then, in your `rc.lua`:
 
-```local modalbind = require("modalbind")```
+```lua
+local modalbind = require("modalbind")
+modalbind.init()
+```
 
 ## Configuration
 
