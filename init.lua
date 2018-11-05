@@ -115,6 +115,10 @@ end
 
 local function show_box(s, map, name)
 	modewibox.screen = s
+	awful.screen.connect_for_each_screen(
+	function(s)
+		  if modewibox.screen ~= s then modewibox[s].visible = false end
+	end)
 	local label = "<big><b>" .. name .. "</b></big>"
 	if settings.show_options then
 		for _, mapping in ipairs(map) do
@@ -132,8 +136,10 @@ local function show_box(s, map, name)
 end
 
 local function hide_box()
-	local s = modewibox.screen
-	if s ~= nil then modewibox[s].visible = false end
+       local s = modewibox.screen
+       awful.screen.connect_for_each_screen(function(s)
+		modewibox[s].visible = false
+       end)
 end
 
 local function mapping_for(keymap, key)
