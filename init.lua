@@ -4,10 +4,9 @@ local modalbind = {}
 local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
-local inited = false
-local modewidget = {}
-local modewibox = { screen = nil }
+local gears = require("gears")
 local nesting = 0
+local verbose = false
 
 --local functions
 
@@ -18,8 +17,9 @@ defaults.height = 22
 defaults.x_offset = 0
 defaults.y_offset = 0
 defaults.show_options = true
-defaults.x_position = "left"
-defaults.y_position = "bottom"
+defaults.position = "bottom_left"
+defaults.honor_padding = true
+defaults.honor_workarea = true
 
 -- Clone the defaults for the used settings
 local settings = {}
@@ -32,119 +32,88 @@ aliases[" "] = "space"
 
 
 
-
-local function getXOffset(s)
-	local xpos = settings.x_position
-
-	if type(xpos) == "number" then
-		return xpos + s.geometry.x
-	elseif xpos == "left" then
-		return s.geometry.x + settings.x_offset
-	elseif xpos == "right" then
-		return s.geometry.x + s.geometry.width - modewibox[s].width - settings.x_offset
-	elseif xpos == "center" then
-		return s.geometry.x + s.geometry.width / 2 - modewibox[s].width / 2 + settings.x_offset
-	end
-	return 0
-end
-
-
-local function getYOffset(s)
-	local ypos = settings.y_position
-
-	if type(ypos) == "number" then
-		return ypos + s.geometry.y
-	elseif ypos == "top" then
-		return s.geometry.y + settings.y_offset
-	elseif ypos == "bottom" then
-		return s.geometry.y + s.geometry.height - modewibox[s].height - settings.y_offset
-	elseif ypos == "center" then
-		return s.geometry.y + s.geometry.height / 2 - modewibox[s].height / 2 + settings.y_offset
-	end
-	return 0
-end
-
-local function calculate_position(s)
-	local minwidth, minheight = modewidget[s]:fit({dpi=96}, s.geometry.width,
-		s.geometry.height)
-	modewibox[s].width = minwidth + 1;
-	modewibox[s].height = math.max(settings.height, minheight)
-
-	modewibox[s].x = getXOffset(s)
-	modewibox[s].y = getYOffset(s)
-end
-
-local function update_settings()
-	for s, value in pairs(modewibox) do
-		calculate_position(s)
-		value.opacity = settings.opacity
-	end
-end
-
-
 function modalbind.init()
+	local modewibox = wibox({
+			ontop=true,
+			visible=false,
+			x=0,
+			y=0,
+			width=1,
+			height=1,
+			opacity=defaults.opacity,
+			bg=beautiful.modebox_bg or "#000",
+			shape=gears.shape.round_rect,
+			type="toolbar"
+	})
+
+	modewibox:setup({
+			{
+				id="text",
+				align="left",
+				font=beautiful.modalbind_font or
+					beautiful.monospaced_font or
+					beautiful.fontface or
+					beautiful.font,
+				widget=wibox.widget.textbox
+			},
+			id="margin",
+			margins=beautiful.modebox_border_width or 5,
+			color=beautiful.modebox_border or "#000",
+			layout=wibox.container.margin,
+	})
+
 	awful.screen.connect_for_each_screen(function(s)
-		modewidget[s] = wibox.widget.textbox()
-		modewidget[s]:set_align("left")
-		if beautiful.fontface then
-			modewidget[s]:set_font(beautiful.fontface .. " " .. (beautiful.fontsize + 4))
-		end
-
-		modewibox[s] = wibox({
-			fg = beautiful.modebox_fg or beautiful.fg_normal,
-			bg = beautiful.modebox_bg or beautiful.bg_normal,
-			border_width = beautiful.modebox_border_width or beautiful.border_width,
-			border_color = beautiful.modebox_border or beautiful.border_focus,
-			screen = s
-		})
-
-		local modelayout = {}
-		modelayout[s] = wibox.layout.fixed.horizontal()
-		modelayout[s]:add(modewidget[s])
-		modewibox[s]:set_widget(modelayout[s]);
-		calculate_position(s)
-		modewibox[s].visible = false
-		modewibox[s].ontop = true
-
-		modewibox[s].widgets = {
-			modewidget[s],
-			layout = wibox.layout.fixed.horizontal
-		}
+			s.modewibox = modewibox
 	end)
 end
 
 local function show_box(s, map, name)
-	modewibox.screen = s
-	awful.screen.connect_for_each_screen(
-	function(s)
-		  if modewibox.screen ~= s then modewibox[s].visible = false end
-	end)
+	local mbox = s.modewibox
+	local mar = mbox:get_children_by_id("margin")[1]
+	local txt = mbox:get_children_by_id("text")[1]
+	mbox.screen = s
+
 	local label = "<big><b>" .. name .. "</b></big>"
 	if settings.show_options then
 		for _, mapping in ipairs(map) do
 			if mapping[1] == "separator" then
-				label = label .. "\n\n<big>" .. mapping[2] .. "</big>\n"
+				label = label .. "\n\n<big>" ..
+					mapping[2] .. "</big>"
 			elseif mapping[1] ~= "onClose" then
-				label = label .. "\n<b>" .. mapping[1] .. "</b>\t" .. (mapping[3] or "???")
+				label = label .. "\n<b>" .. mapping[1] ..
+					"</b>\t" .. (mapping[3] or "???")
 			end
 		end
 
 	end
-	modewidget[s]:set_markup(label)
-	modewibox[s].visible = true
-	calculate_position(s)
+	txt:set_markup(label)
+
+	local x, y = txt:get_preferred_size(s)
+	mbox.width = x + mar.left + mar.right
+	mbox.height = math.max(settings.height, y + mar.top + mar.bottom)
+	awful.placement.align(
+		mbox,
+		{
+			position=settings.position,
+			honor_padding=settings.honor_padding,
+			honor_workarea=settings.honor_workarea,
+			offset={x=settings.x_offset,
+					y=settings.y_offset}
+		}
+	)
+	mar.opacity = settings.opacity
+
+	mbox.visible = true
 end
 
 local function hide_box()
-       local s = modewibox.screen
-       awful.screen.connect_for_each_screen(function(s)
-		modewibox[s].visible = false
-       end)
+	screen[1].modewibox.visible = false
 end
 
 local function mapping_for(keymap, key)
 	for _, mapping in ipairs(keymap) do
-		if mapping[1] == key or (aliases[key] and mapping[1] == aliases[key]) then
+		if mapping[1] == key or
+		(aliases[key] and mapping[1] == aliases[key]) then
 			return mapping
 		end
 	end
@@ -190,7 +159,9 @@ function modalbind.grab(keymap, name, stay_in_mode, args)
 				return true
 			end
 		else
-			print("Unmapped key: \"" .. key .. "\"")
+			if verbose then
+				print("Unmapped key: \"" .. key .. "\"")
+			end
 		end
 
 		return true
@@ -202,55 +173,40 @@ function modalbind.grabf(keymap, name, stay_in_mode)
 end
 
 --- Returns the wibox displaying the bound keys
-function modalbind.modebox() return modewibox[mouse.screen] end
+function modalbind.modebox() return mouse.screen.modewibox end
 
 --- Change the opacity of the modebox.
 -- @param amount opacity between 0.0 and 1.0, or nil to use default
 function modalbind.set_opacity(amount)
 	settings.opacity = amount or defaults.opacity
-	update_settings()
 end
 
 --- Change min height of the modebox.
 -- @param amount height in pixels, or nil to use default
 function modalbind.set_minheight(amount)
 	settings.height = amount or defaults.height
-	update_settings()
 end
 
 --- Change horizontal offset of the modebox.
--- set location for the box with set_corner(). The box is shifted to the right
--- if it is in one of the left corners or to the left otherwise
+-- set location offset for the box. The box is shifted to the right
 -- @param amount horizontal shift in pixels, or nil to use default
-function modalbind.set_x_offset (amount)
+function modalbind.set_x_offset(amount)
 	settings.x_offset = amount or defaults.x_offset
-	update_settings()
 end
 
 --- Change vertical offset of the modebox.
--- set location for the box with set_corner(). The box is shifted downwards if it
--- is in one of the upper corners or upwards otherwise.
+-- set location offset for the box. The box is shifted downwards.
 -- @param amount vertical shift in pixels, or nil to use default
 function modalbind.set_y_offset(amount)
 	settings.y_offset = amount or defaults.y_offset
-	update_settings()
 end
 
---- Set the corner, where the modebox will be displayed
--- If a parameter is not a valid orientation (see below), the function returns
--- without doing anything
--- @param vertical either top or bottom
--- @param horizontal either left or right
-function modalbind.set_location(horizontal, vertical)
-	if (vertical ~= "top" and vertical ~= "bottom" and vertical ~= "center" and type(vertical) ~= "number") then
-		return
-	end
-	if (horizontal ~= "left" and horizontal ~= "right" and horizontal ~= "center" and type(horizontal) ~= "number") then
-		return
-	end
-
-	settings.x_position = horizontal
-	settings.y_position = vertical
+--- Set the position, where the modebox will be displayed
+-- Allowed options are listed on page
+-- https://awesomewm.org/apidoc/libraries/awful.placement.html#align
+-- @param position of the widget
+function modalbind.set_location(position)
+	settings.position = position
 end
 
 ---  enable displaying bindings for current mode

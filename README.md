@@ -82,20 +82,15 @@ The position and contents of the wibox can be configured:
 
 ### Positioning
 
-`modalbind.set_location(horizontal, vertical)` sets the location of the wibox
-displaying the mode and the bindings. `horizontal` and `vertical` can be
-numbers, in which case the positioning is absolute, or `"left" / "right" /
-"center"` (horizontal) `"top" / "bottom" / "center"` (vertical), in which case
-the position is calculated based on the screen geometry and the wibox size.
+`modalbind.set_location(position)` sets the location of the wibox
+displaying the mode and the bindings. Acceptable values of the `position`
+argument are `"top_left"`, `"top"`, `"top_right"` e.t.c. Full list of
+acceptable positions can be found
+[here](https://awesomewm.org/doc/api/libraries/awful.placement.html#align).
 
-Combining relative and absolute positioning is possible, so you can have a wibox
-on the bottom at 123px from the left with `set_location(123, "bottom")`.
-
-For convenience, there are additional methods for setting an offset in addition
-to a relative position, `set_x_offset(amount)` / `set_y_offset(amount)`. The
-wibox is moved the given amount of pixels *away from the border*, e.g. down for
-`top` but up for `bottom`. For `center` the box is moved right / down. The
-offsets are ignored, if the location was set to an absolute value.
+Additionally, location offset can be added via `set_x_offset(amount)` /
+`set_y_offset(amount)`. The wibox is moved the given amount of pixels to the
+*bottom right*. Negative offset values are allowed.
 
 ### Wibox style
 
