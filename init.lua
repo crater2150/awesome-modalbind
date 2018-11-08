@@ -224,4 +224,9 @@ function modalbind.hide_options()
 	settings.show_options = false
 end
 
+---  set key aliases table
+function modalbind.set_aliases(t)
+	aliases = t
+end
+
 return modalbind
