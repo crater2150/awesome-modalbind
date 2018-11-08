@@ -41,7 +41,10 @@ function modalbind.init()
 			width=1,
 			height=1,
 			opacity=defaults.opacity,
-			bg=beautiful.modebox_bg or "#000",
+			bg=beautiful.modebox_bg or
+				beautiful.bg_normal,
+			fg=beautiful.modebox_fg or
+				beautiful.fg_normal,
 			shape=gears.shape.round_rect,
 			type="toolbar"
 	})
@@ -57,8 +60,10 @@ function modalbind.init()
 				widget=wibox.widget.textbox
 			},
 			id="margin",
-			margins=beautiful.modebox_border_width or 5,
-			color=beautiful.modebox_border or "#000",
+			margins=beautiful.modebox_border_width or
+				beautiful.border_width,
+			color=beautiful.modebox_border or
+				beautiful.border_focus,
 			layout=wibox.container.margin,
 	})
 
