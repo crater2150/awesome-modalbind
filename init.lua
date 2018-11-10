@@ -1,5 +1,6 @@
 -- awesome-modalbind - modal keybindings for awesomewm
 
+local awesome, client, mouse, screen, tag = awesome, client, mouse, screen, tag
 local modalbind = {}
 local wibox = require("wibox")
 local awful = require("awful")
@@ -27,10 +28,26 @@ for key, value in pairs(defaults) do
 	settings[key] = value
 end
 
+local prev_layout = nil
+
 local aliases = {}
 aliases[" "] = "space"
 
 
+
+local function layout_swap(new)
+	if type(new) == "number" and new >= 0 and new <= 3 then
+		prev_layout = awesome.xkb_get_layout_group()
+		awesome.xkb_set_layout_group(new)
+	end
+end
+
+local function layout_return()
+	if prev_layout ~= nil then
+		awesome.xkb_set_layout_group(prev_layout)
+		prev_layout = nil
+	end
+end
 
 function modalbind.init()
 	local modewibox = wibox({
@@ -136,7 +153,14 @@ local function call_key_if_present(keymap, key, args)
 	if callback then callback[2](args) end
 end
 
-function modalbind.grab(keymap, name, stay_in_mode, args)
+function modalbind.grab(options)
+	local keymap = options.keymap or {}
+	local name = options.name
+	local stay_in_mode = options.stay_in_mode or false
+	local args = options.args
+	local layout = options.layout
+
+	layout_swap(layout)
 	if name then
 		show_box(mouse.screen, keymap, name)
 		nesting = nesting + 1
@@ -147,6 +171,7 @@ function modalbind.grab(keymap, name, stay_in_mode, args)
 		if key == "Escape" then
 			call_key_if_present(keymap, "onClose", args)
 			close_box()
+			layout_return()
 			return true
 		end
 
@@ -157,10 +182,14 @@ function modalbind.grab(keymap, name, stay_in_mode, args)
 			keygrabber.stop()
 			mapping[2](args)
 			if stay_in_mode then
-				modalbind.grab(keymap, name, true)
+				modalbind.grab{keymap = keymap,
+					name = name,
+					stay_in_mode = true,
+					args = args}
 			else
 				nesting = nesting - 1
 				if nesting < 1 then hide_box() end
+				layout_return()
 				return true
 			end
 		else

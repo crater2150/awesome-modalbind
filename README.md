@@ -3,8 +3,9 @@
 modalbind allows you to create modal keybindings (similar to vim modes) in
 [awesome](https://awesomewm.org/). *modalbind requires awesome 4.0+*
 
-To use it, you define a table of bindings for a mode and create a normal binding
-to enter that mode. A mode table contains one table per binding, in the form
+To use it, you define a `keymap` table of bindings for a mode and
+create a normal binding to enter that mode. A `keymap` mode table contains one
+table per binding,in the form
 ```lua
 	{
 		key,        -- the key like for awful.key
@@ -19,11 +20,18 @@ the popup. Just add a table like the following:
   {"separator", group_title } -- literal string "separator" is required.
 ```
 
-Then, bind a key to `modalbind.grab(mapping_table, "Some Title")`, to open the mode menu. `modalbind.grab` takes up to four parameters:
-1. the mapping table
-2. the mode name. Optional, if not set, no box will be shown.
-3. "Stay in mode", boolean. If true, awesome will stay in the input mode until escape is pressed.
-4. additional arguments passed on to functions in the mapping table, e.g. passing the client for `clientkeys` bindings.
+Then, bind a key to `modalbind.grab{keymap=mapping_table, name="Some Title"}`,
+to open the mode menu. `modalbind.grab` takes up to five named parameters:
+1. `keymap` - the mapping table
+2. `name` - the mode name. Optional, if not set, no box will be shown.
+3. `stay_in_mode` - "Stay in mode" boolean. If true, awesome will stay in
+the input mode until escape is pressed. Defaults to `false`.
+4. `args` - additional arguments passed on to functions in the mapping table,
+e.g. passing the client for `clientkeys` bindings.
+5. `layout` - index of the layout, widget will automatically switch to. If two
+layouts are defined in the system (indexed 0 and 1), widget will switch to the
+chosen one upon entering input mode and restore previous layout,
+leaving it. When argument is not set, widget will not change the layout.
 
 An example mode for controlling mpd, entered by pressing <kbd>Mod</kbd> + <kbd>m</kbd>:
 
@@ -43,7 +51,7 @@ local modalbind = require("modalbind")
 modalbind.init()
 
 	...
-	awful.key({ modkey }, "m", function() modalbind.grab(mpdmap, "MPD", true) end),
+	awful.key({ modkey }, "m", function() modalbind.grab{keymap=mpdmap, name="MPD", stay_in_mode=true} end),
 	...
 ```
 
@@ -102,10 +110,12 @@ Theming is done via beautiful, the wibox uses default colors and the border
 color for focused windows. You can override this with these theme keys:
 
 ```lua
-theme.modebox_fg = "#AABBCC"     -- foreground
-theme.modebox_bg = "#DDEEFF"     -- background
-theme.modebox_border = "#112233" -- border color
-theme.modebox_border_width = 1   -- border width
+theme.modalbind_font = "Monospace 9" -- font
+theme.modebox_fg = "#AABBCC"         -- foreground
+theme.modebox_fg = "#AABBCC"         -- foreground
+theme.modebox_bg = "#DDEEFF"         -- background
+theme.modebox_border = "#112233"     -- border color
+theme.modebox_border_width = 1       -- border width
 ```
 
 You can change the opacity of the box with `modalbind.set_opacity(opacity)`,
