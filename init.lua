@@ -134,8 +134,10 @@ end
 
 local function mapping_for(keymap, key)
 	for _, mapping in ipairs(keymap) do
-		if mapping[1] == key or
-		(aliases[key] and mapping[1] == aliases[key]) then
+		local m = mapping[1]:lower()
+		local k = key:lower()
+		if m == k or
+		(aliases[k] and m == k) then
 			return mapping
 		end
 	end
