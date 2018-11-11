@@ -132,10 +132,16 @@ local function hide_box()
 	screen[1].modewibox.visible = false
 end
 
-local function mapping_for(keymap, key)
+local function mapping_for(keymap, key, use_lower)
+	local k = key
+	if use_lower then
+		k = k:lower()
+	end
 	for _, mapping in ipairs(keymap) do
-		local m = mapping[1]:lower()
-		local k = key:lower()
+		local m = mapping[1]
+		if use_lower then
+			m = m:lower()
+		end
 		if m == k or
 		(aliases[k] and m == k) then
 			return mapping
@@ -150,8 +156,8 @@ local function close_box()
 	hide_box();
 end
 
-local function call_key_if_present(keymap, key, args)
-	local callback = mapping_for(keymap,key)
+local function call_key_if_present(keymap, key, args, use_lower)
+	local callback = mapping_for(keymap,key, use_lower)
 	if callback then callback[2](args) end
 end
 
@@ -161,13 +167,14 @@ function modalbind.grab(options)
 	local stay_in_mode = options.stay_in_mode or false
 	local args = options.args
 	local layout = options.layout
+	local use_lower = options.case_insensitive or false
 
 	layout_swap(layout)
 	if name then
 		show_box(mouse.screen, keymap, name)
 		nesting = nesting + 1
 	end
-	call_key_if_present(keymap, "onOpen", args)
+	call_key_if_present(keymap, "onOpen", args, use_lower)
 
 	keygrabber.run(function(mod, key, event)
 		if key == "Escape" then
@@ -179,7 +186,7 @@ function modalbind.grab(options)
 
 		if event == "release" then return true end
 
-		mapping = mapping_for(keymap, key)
+		mapping = mapping_for(keymap, key, use_lower)
 		if mapping then
 			keygrabber.stop()
 			mapping[2](args)
@@ -187,7 +194,8 @@ function modalbind.grab(options)
 				modalbind.grab{keymap = keymap,
 					name = name,
 					stay_in_mode = true,
-					args = args}
+					args = args,
+					use_lower=use_lower}
 			else
 				nesting = nesting - 1
 				if nesting < 1 then hide_box() end

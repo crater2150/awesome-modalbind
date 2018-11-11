@@ -21,7 +21,7 @@ the popup. Just add a table like the following:
 ```
 
 Then, bind a key to `modalbind.grab{keymap=mapping_table, name="Some Title"}`,
-to open the mode menu. `modalbind.grab` takes up to five named parameters:
+to open the mode menu. `modalbind.grab` takes up to six named parameters:
 1. `keymap` - the mapping table
 2. `name` - the mode name. Optional, if not set, no box will be shown.
 3. `stay_in_mode` - "Stay in mode" boolean. If true, awesome will stay in
@@ -32,6 +32,7 @@ e.g. passing the client for `clientkeys` bindings.
 layouts are defined in the system (indexed 0 and 1), widget will switch to the
 chosen one upon entering input mode and restore previous layout,
 leaving it. When argument is not set, widget will not change the layout.
+6. `case_insensitive` - convert keys to lowercase befor matching.
 
 An example mode for controlling mpd, entered by pressing <kbd>Mod</kbd> + <kbd>m</kbd>:
 
