@@ -28,7 +28,7 @@ to open the mode menu. `modalbind.grab` takes up to six named parameters:
 the input mode until escape is pressed. Defaults to `false`.
 4. `args` - additional arguments passed on to functions in the mapping table,
 e.g. passing the client for `clientkeys` bindings.
-5. `layout` - index of the layout, widget will automatically switch to. If two
+5. `layout` - index of the keyboard layout, widget will automatically switch to. If two
 layouts are defined in the system (indexed 0 and 1), widget will switch to the
 chosen one upon entering input mode and restore previous layout,
 leaving it. When argument is not set, widget will not change the layout.
@@ -112,7 +112,6 @@ color for focused windows. You can override this with these theme keys:
 
 ```lua
 theme.modalbind_font = "Monospace 9" -- font
-theme.modebox_fg = "#AABBCC"         -- foreground
 theme.modebox_fg = "#AABBCC"         -- foreground
 theme.modebox_bg = "#DDEEFF"         -- background
 theme.modebox_border = "#112233"     -- border color
