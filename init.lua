@@ -150,19 +150,31 @@ local function mapping_for(keymap, key, use_lower)
 	return nil
 end
 
-local function close_box()
-	keygrabber.stop()
-	nesting = 0
-	hide_box();
-end
-
 local function call_key_if_present(keymap, key, args, use_lower)
 	local callback = mapping_for(keymap,key, use_lower)
 	if callback then callback[2](args) end
 end
 
+function close_box(keymap, args)
+  call_key_if_present(keymap, "onClose", args)
+	keygrabber.stop()
+	nesting = 0
+	hide_box();
+  layout_return()
+end
+
+function modalbind.close_box()
+  return close_box
+end
+
+
+modalbind.default_keys = {
+  { "Escape", modalbind.close_box, "Exit Modal" },
+  { "Return", modalbind.close_box, "Exit Modal" }
+}
+
 function modalbind.grab(options)
-	local keymap = options.keymap or {}
+	local keymap = gears.table.join(modalbind.default_keys or {}, options.keymap or {})
 	local name = options.name
 	local stay_in_mode = options.stay_in_mode or false
 	local args = options.args
@@ -177,16 +189,15 @@ function modalbind.grab(options)
 	call_key_if_present(keymap, "onOpen", args, use_lower)
 
 	keygrabber.run(function(mod, key, event)
-		if key == "Escape" then
-			call_key_if_present(keymap, "onClose", args)
-			close_box()
-			layout_return()
-			return true
-		end
-
 		if event == "release" then return true end
 
 		mapping = mapping_for(keymap, key, use_lower)
+    if (mapping[2] == close_box or 
+        mapping[2] == modalbind.close_box) then
+      close_box(keymap, args)
+      return true
+    end
+
 		if mapping then
 			keygrabber.stop()
 			mapping[2](args)
