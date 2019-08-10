@@ -70,6 +70,16 @@ in mpd mode, so that pressing <kbd>n</kbd> several times for skipping a few
 songs is possible. If the parameter is set to false, the mode acts like a menu,
 closing after an action is chosen.
 
+You can configure binding defaults that apply to all modes with modalbind.default_keys
+
+```lua
+ modalbind.default_keys = {
+  {"separator", "mode control" },
+  {"Escape", modalbind.close_box, "Close Modal"},
+  {"Return", modalbind.close_box, "Close Modal"}
+}
+```
+
 ## Installation
 
 Put this repository somewhere in the lua search path for awesome. If your

@@ -173,8 +173,29 @@ modalbind.default_keys = {
   { "Return", modalbind.close_box, "Exit Modal" }
 }
 
+local function merge_default_keys(keymap) 
+  local result = {}
+  for j,k in ipairs(modalbind.default_keys) do
+    local no_add = false
+    for i,m in ipairs(keymap) do 
+      if k[1] ~= "separator" and
+         m[1] == k[1] then 
+        no_add = true
+        break
+      end
+     end
+     if not no_add then
+       table.insert(result, k)
+     end
+  end
+  for _,m in ipairs(keymap) do 
+    table.insert(result, m)
+  end
+  return result
+end
+
 function modalbind.grab(options)
-	local keymap = gears.table.join(modalbind.default_keys or {}, options.keymap or {})
+	local keymap = merge_default_keys(options.keymap or {})
 	local name = options.name
 	local stay_in_mode = options.stay_in_mode or false
 	local args = options.args
