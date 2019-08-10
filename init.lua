@@ -249,8 +249,8 @@ function modalbind.grab(options)
 	end)
 end
 
-function modalbind.grabf(keymap, name, stay_in_mode)
-	return function() modalbind.grab(keymap, name, stay_in_mode) end
+function modalbind.grabf(options)
+	return function() modalbind.grab(options) end
 end
 
 --- Returns the wibox displaying the bound keys
