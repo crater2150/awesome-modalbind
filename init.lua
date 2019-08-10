@@ -18,6 +18,7 @@ defaults.height = 22
 defaults.x_offset = 0
 defaults.y_offset = 0
 defaults.show_options = true
+defaults.show_default_options = true
 defaults.position = "bottom_left"
 defaults.honor_padding = true
 defaults.honor_workarea = true
@@ -204,7 +205,11 @@ function modalbind.grab(options)
 
 	layout_swap(layout)
 	if name then
-		show_box(mouse.screen, keymap, name)
+		if settings.show_default_options then
+			show_box(mouse.screen, keymap, name)
+		else
+			show_box(mouse.screen, options.keymap, name)
+		end
 		nesting = nesting + 1
 	end
 	call_key_if_present(keymap, "onOpen", args, use_lower)
@@ -293,6 +298,16 @@ end
 ---  disable displaying bindings for current mode
 function modalbind.hide_options()
 	settings.show_options = false
+end
+--
+---  enable displaying bindings for current mode
+function modalbind.show_default_options()
+	settings.show_default_options = true
+end
+--
+---  disable displaying bindings for current mode
+function modalbind.hide_default_options()
+	settings.show_default_options = false
 end
 
 ---  set key aliases table
