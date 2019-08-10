@@ -117,7 +117,8 @@ Additionally, location offset can be added via `set_x_offset(amount)` /
 
 With `show_options()` and `hide_options()` you can enable or disable showing all
 bindings in the box. If disabled, the wibox will only display the name of the
-current mode.
+current mode. With `show_default_options()` and `hide_default_options()` you can
+control if the shown bindings should include bindings from `default_keys`.
 
 Theming is done via beautiful, the wibox uses default colors and the border
 color for focused windows. You can override this with these theme keys:
