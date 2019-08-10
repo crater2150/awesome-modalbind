@@ -213,13 +213,13 @@ function modalbind.grab(options)
 		if event == "release" then return true end
 
 		mapping = mapping_for(keymap, key, use_lower)
-    if (mapping[2] == close_box or 
-        mapping[2] == modalbind.close_box) then
-      close_box(keymap, args)
-      return true
-    end
-
 		if mapping then
+      if (mapping[2] == close_box or 
+          mapping[2] == modalbind.close_box) then
+        close_box(keymap, args)
+        return true
+      end
+
 			keygrabber.stop()
 			mapping[2](args)
 			if stay_in_mode then
