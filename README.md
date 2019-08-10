@@ -70,7 +70,7 @@ in mpd mode, so that pressing <kbd>n</kbd> several times for skipping a few
 songs is possible. If the parameter is set to false, the mode acts like a menu,
 closing after an action is chosen.
 
-You can configure binding defaults that apply to all modes with modalbind.default_keys. 
+You can configure binding defaults that apply to all modes with modalbind.default_keys.
 The default keybindings are Escape and Return as shown.
 
 ```lua

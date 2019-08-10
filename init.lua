@@ -156,42 +156,42 @@ local function call_key_if_present(keymap, key, args, use_lower)
 end
 
 function close_box(keymap, args)
-  call_key_if_present(keymap, "onClose", args)
+	call_key_if_present(keymap, "onClose", args)
 	keygrabber.stop()
 	nesting = 0
 	hide_box();
-  layout_return()
+	layout_return()
 end
 
 function modalbind.close_box()
-  return close_box
+	return close_box
 end
 
 
 modalbind.default_keys = {
-  { "Escape", modalbind.close_box, "Exit Modal" },
-  { "Return", modalbind.close_box, "Exit Modal" }
+	{ "Escape", modalbind.close_box, "Exit Modal" },
+	{ "Return", modalbind.close_box, "Exit Modal" }
 }
 
-local function merge_default_keys(keymap) 
-  local result = {}
-  for j,k in ipairs(modalbind.default_keys) do
-    local no_add = false
-    for i,m in ipairs(keymap) do 
-      if k[1] ~= "separator" and
-         m[1] == k[1] then 
-        no_add = true
-        break
-      end
-     end
-     if not no_add then
-       table.insert(result, k)
-     end
-  end
-  for _,m in ipairs(keymap) do 
-    table.insert(result, m)
-  end
-  return result
+local function merge_default_keys(keymap)
+	local result = {}
+	for j,k in ipairs(modalbind.default_keys) do
+		local no_add = false
+		for i,m in ipairs(keymap) do
+			if k[1] ~= "separator" and
+				m[1] == k[1] then
+				no_add = true
+				break
+			end
+		end
+		if not no_add then
+			table.insert(result, k)
+		end
+	end
+	for _,m in ipairs(keymap) do
+		table.insert(result, m)
+	end
+	return result
 end
 
 function modalbind.grab(options)
@@ -214,11 +214,11 @@ function modalbind.grab(options)
 
 		mapping = mapping_for(keymap, key, use_lower)
 		if mapping then
-      if (mapping[2] == close_box or 
-          mapping[2] == modalbind.close_box) then
-        close_box(keymap, args)
-        return true
-      end
+			if (mapping[2] == close_box or
+				mapping[2] == modalbind.close_box) then
+				close_box(keymap, args)
+				return true
+			end
 
 			keygrabber.stop()
 			mapping[2](args)
