@@ -7,11 +7,16 @@ To use it, you define a `keymap` table of bindings for a mode and
 create a normal binding to enter that mode. A `keymap` mode table contains one
 table per binding,in the form
 ```lua
-	{
-		key,        -- the key like for awful.key
-		action,     -- function to call
-		description -- optional, shown to user while in mode
-	}
+{
+    -- the key like for awful.key
+    key,
+   -- function to call
+    action,
+    -- optional, shown to user while in mode
+    description,
+    -- optional, override mode-wide stay_in_mode setting. see below
+    stay_in_mode=true/false
+}
 ```
 
 Additionally, separator elements can be added to group the actions displayed in
@@ -24,14 +29,15 @@ Then, bind a key to `modalbind.grab{keymap=mapping_table, name="Some Title"}`,
 to open the mode menu. `modalbind.grab` takes up to six named parameters:
 1. `keymap` - the mapping table
 2. `name` - the mode name. Optional, if not set, no box will be shown.
-3. `stay_in_mode` - "Stay in mode" boolean. If true, awesome will stay in
-the input mode until escape is pressed. Defaults to `false`.
+3. `:tay_in_mode` - "Stay in the current mode" boolean. If true, awesome will stay in
+   the input mode until escape is pressed. Defaults to `false`. Any mapping in the
+   keymap may contain a stay_in_mode entry, which overrides this for that key only.
 4. `args` - additional arguments passed on to functions in the mapping table,
-e.g. passing the client for `clientkeys` bindings.
+   e.g. passing the client for `clientkeys` bindings.
 5. `layout` - index of the keyboard layout, widget will automatically switch to. If two
-layouts are defined in the system (indexed 0 and 1), widget will switch to the
-chosen one upon entering input mode and restore previous layout,
-leaving it. When argument is not set, widget will not change the layout.
+   layouts are defined in the system (indexed 0 and 1), widget will switch to the
+   chosen one upon entering input mode and restore previous layout,
+   leaving it. When argument is not set, widget will not change the layout.
 6. `case_insensitive` - convert keys to lowercase befor matching.
 
 An example mode for controlling mpd, entered by pressing <kbd>Mod</kbd> + <kbd>m</kbd>:
@@ -57,6 +63,11 @@ modalbind.init()
 ```
 
 Pressing <kbd>Mod</kbd> + <kbd>m</kbd> now will enter the mode and display a wibox with the keys:
+
+*Note on the `stay_in_mode` option*: When a mapping's function uses the
+keygrabber itself (e.g. another call to `modalbind.grab`), `stay_in_mode`
+cannot be used! If your parent mode has `stay_in_mode` set, disable it locally
+for each key starting its own keygrabber.
 
 ![mpd wibox example](doc/example-mpd-wibox.png)
 

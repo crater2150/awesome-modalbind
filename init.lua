@@ -227,6 +227,12 @@ function modalbind.grab(options)
 
 			keygrabber.stop()
 			mapping[2](args)
+
+			-- mapping "stay_in_mode" takes precedence over mode-wide setting
+			if mapping["stay_in_mode"] ~= nil then
+				stay_in_mode = mapping["stay_in_mode"]
+			end
+
 			if stay_in_mode then
 				modalbind.grab{keymap = keymap,
 					name = name,
