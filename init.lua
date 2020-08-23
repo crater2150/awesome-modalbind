@@ -109,6 +109,7 @@ local function show_box(s, map, name)
 		end
 
 	end
+	label = label .. '\n'  -- Ensure last entry is displayed.
 	txt:set_markup(label)
 
 	local x, y = txt:get_preferred_size(s)
