@@ -124,7 +124,7 @@ local function show_box(s, map, name)
 					y=settings.y_offset}
 		}
 	)
-	mar.opacity = settings.opacity
+	mbox.opacity = settings.opacity
 
 	mbox.visible = true
 end
