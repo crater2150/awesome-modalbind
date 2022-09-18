@@ -1,20 +1,21 @@
 # Modal keybindings for AwesomeWM
 
 modalbind allows you to create modal keybindings (similar to vim modes) in
-[awesome](https://awesomewm.org/). *modalbind requires awesome 4.0+*
+[awesome](https://awesomewm.org/). *modalbind requires awesome 4.3+*, for
+awesome 4.0 to 4.2, you can use the `v0.3` tag. awesome < 4.0 is not supported.
 
-To use it, you define a `keymap` table of bindings for a mode and
+To use modalbind, you define a `keymap` table of bindings for a mode and
 create a normal binding to enter that mode. A `keymap` mode table contains one
-table per binding,in the form
+table per binding, which is pretty similar to `awful.key` bindings:
 ```lua
 {
-    -- the key like for awful.key
+    -- modifiers, key, action and description like for awful.key
+    -- modifier table is optional for backwards compatibility
+    {modifiers},
     key,
-   -- function to call
     action,
-    -- optional, shown to user while in mode
     description,
-    -- optional, override mode-wide stay_in_mode setting. see below
+    -- optional: override mode-wide stay_in_mode setting. see below
     stay_in_mode=true/false
 }
 ```
@@ -26,31 +27,37 @@ the popup. Just add a table like the following:
 ```
 
 Then, bind a key to `modalbind.grab{keymap=mapping_table, name="Some Title"}`,
-to open the mode menu. `modalbind.grab` takes up to six named parameters:
-1. `keymap` - the mapping table
-2. `name` - the mode name. Optional, if not set, no box will be shown.
-3. `:tay_in_mode` - "Stay in the current mode" boolean. If true, awesome will stay in
-   the input mode until escape is pressed. Defaults to `false`. Any mapping in the
-   keymap may contain a stay_in_mode entry, which overrides this for that key only.
-4. `args` - additional arguments passed on to functions in the mapping table,
-   e.g. passing the client for `clientkeys` bindings.
-5. `layout` - index of the keyboard layout, widget will automatically switch to. If two
-   layouts are defined in the system (indexed 0 and 1), widget will switch to the
-   chosen one upon entering input mode and restore previous layout,
-   leaving it. When argument is not set, widget will not change the layout.
-6. `case_insensitive` - convert keys to lowercase befor matching.
+to open the mode menu. `modalbind.grab` accepts the following named parameters:
+- `keymap` - the mapping table
+- `name` - the mode name. If not set, no box will be shown. *NOT* optional, if
+  any binding recursively opens a modalbind, in which case the nested modals
+  need to have a different name from the parent.
+- `stay_in_mode` - boolean. If true, awesome will stay in the input mode until
+  escape is pressed. Defaults to `false`. Any mapping in the keymap may contain
+  a stay_in_mode entry, which overrides this for that key only.
+- `args` - additional arguments passed on to functions in the mapping table,
+  e.g. passing the client for `clientkeys` bindings.
+- `layout` - index of the keyboard layout, widget will automatically switch to.
+  If multiple layouts are defined in the system, widget will switch to the
+  chosen one upon entering input mode and restore previous layout, leaving it.
+  When argument is not set, widget will not change the layout.
+- `case_insensitive` - have bindings work case insensitively.
+- `onOpen` - a function that is called, when the modal is started.
+- `onClose` - a function that is called, when the modal ends, whether from
+  a binding or from pressing escape.
+
 
 An example mode for controlling mpd, entered by pressing <kbd>Mod</kbd> + <kbd>m</kbd>:
 
 ```lua
 local mpdmap = {
-	{ "s", function() awful.util.spawn("mpd") end,        "start MPD" },
-	{ "S", function() awful.util.spawn("mpd --kill") end, "kill MPD" },
-	{ "g", function() awful.util.spawn("gmpc") end,       "GMPC" },
+	{ "s",            function() awful.util.spawn("mpd") end,        "start MPD" },
+	{ {"Shift"}, "s", function() awful.util.spawn("mpd --kill") end, "kill MPD" },
+	{ "g",            function() awful.util.spawn("gmpc") end,       "GMPC", stay_in_mode=false},
 	{ "separator", "Playback" },
-	{ "m", function() awful.util.spawn("mpc toggle") end, "Toggle" },
-	{ "n", function() awful.util.spawn("mpc next") end,   "Next" },
-	{ "N", function() awful.util.spawn("mpc prev") end,   "Prev" },
+	{ "m",            function() awful.util.spawn("mpc toggle") end, "Toggle" },
+	{ "n",            function() awful.util.spawn("mpc next") end,   "Next" },
+	{ {"Shift"}, "n", function() awful.util.spawn("mpc prev") end,   "Prev" },
 }
 
 -- in your keybindings:
@@ -79,7 +86,8 @@ The third parameter to `modalbind.grab` determines, if input will stay in the mo
 after a bound key other than Escape is pressed. In the mpd example, input stays
 in mpd mode, so that pressing <kbd>n</kbd> several times for skipping a few
 songs is possible. If the parameter is set to false, the mode acts like a menu,
-closing after an action is chosen.
+closing after an action is chosen. It can be overridden for single bindings,
+like the "g" binding starting Gmpc.
 
 You can configure binding defaults that apply to all modes with modalbind.default_keys.
 The default keybindings are Escape and Return as shown.
@@ -87,8 +95,8 @@ The default keybindings are Escape and Return as shown.
 ```lua
  modalbind.default_keys = {
   {"separator", "mode control" },
-  {"Escape", modalbind.close_box, "Close Modal"},
-  {"Return", modalbind.close_box, "Close Modal"}
+  {"Escape", function() end, "Close Modal", stay_in_mode=false},
+  {"Return", function() end, "Close Modal", stay_in_mode=false}
 }
 ```
 

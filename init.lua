@@ -6,10 +6,6 @@ local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
 local gears = require("gears")
-local nesting = 0
-local verbose = false
-
---local functions
 
 local defaults = {}
 
@@ -29,12 +25,9 @@ for key, value in pairs(defaults) do
 	settings[key] = value
 end
 
+local active_grabber = nil
+
 local prev_layout = nil
-
-local aliases = {}
-aliases[" "] = "space"
-
-
 
 local function layout_swap(new)
 	if type(new) == "number" and new >= 0 and new <= 3 then
@@ -99,12 +92,11 @@ local function show_box(s, map, name)
 	local label = "<big><b>" .. name .. "</b></big>"
 	if settings.show_options then
 		for _, mapping in ipairs(map) do
-			if mapping[1] == "separator" then
-				label = label .. "\n\n<big>" ..
-					mapping[2] .. "</big>"
-			elseif mapping[1] ~= "onClose" then
-				label = label .. "\n<b>" .. gears.string.xml_escape(mapping[1]) ..
-					"</b>\t" .. (mapping[3] or "???")
+			if mapping[2] == "separator" then
+				label = label .. "\n\n<big>" .. mapping[3] .. "</big>"
+			else
+				label = label .. "\n<b>" .. table.concat(mapping[1], "+") ..
+					(next(mapping[1]) ~= nil and "+" or "") .. mapping[2] .. "</b>\t" .. (mapping[4] or "???")
 			end
 		end
 
@@ -133,60 +125,26 @@ local function hide_box()
 	screen[1].modewibox.visible = false
 end
 
-local function mapping_for(keymap, key, use_lower)
-	local k = key
-	if use_lower then
-		k = k:lower()
-	end
-	for _, mapping in ipairs(keymap) do
-		local m = mapping[1]
-		if use_lower then
-			m = m:lower()
-		end
-		if m == k or
-		(aliases[k] and m == k) then
-			return mapping
-		end
-	end
-	return nil
-end
-
-local function call_key_if_present(keymap, key, args, use_lower)
-	local callback = mapping_for(keymap,key, use_lower)
-	if callback then callback[2](args) end
-end
-
-function close_box(keymap, args)
-	call_key_if_present(keymap, "onClose", args)
-	keygrabber.stop()
-	nesting = 0
-	hide_box();
-	layout_return()
-end
-
-function modalbind.close_box()
-	return close_box
-end
-
-
 modalbind.default_keys = {
-	{ "Escape", modalbind.close_box, "Exit Modal" },
-	{ "Return", modalbind.close_box, "Exit Modal" }
+	{ "Escape", function() end, "Exit Modal", stay_in_mode = false},
+	{ "Return", function() end, "Exit Modal", stay_in_mode = false}
 }
 
 local function merge_default_keys(keymap)
 	local result = {}
-	for j,k in ipairs(modalbind.default_keys) do
+	for _, default_binding in ipairs(modalbind.default_keys) do
 		local no_add = false
-		for i,m in ipairs(keymap) do
-			if k[1] ~= "separator" and
-				m[1] == k[1] then
+		for _, map_binding in ipairs(keymap) do
+			if default_binding[1] ~= "separator" and
+				(#map_binding == 3 and default_binding[1] == map_binding[1]) or
+				(#map_binding == 4 and next(map_binding[1]) == nil and default_binding[1] == map_binding[2])
+				then
 				no_add = true
 				break
 			end
 		end
 		if not no_add then
-			table.insert(result, k)
+			table.insert(result, default_binding)
 		end
 	end
 	for _,m in ipairs(keymap) do
@@ -195,64 +153,115 @@ local function merge_default_keys(keymap)
 	return result
 end
 
+local function isupper(s) return string.match(s, "%u*") == s end
+
+--- Make adjustments to the keymap, so it works with the keygrabber
+--
+-- Adds an empty modifier table if necessary, makes sure Shift is combined with
+-- an uppercase letter, and passes common arguments to functions.
+--
+-- @param keymap The keymap given to modalbind
+local function adapt_to_keygrabber(keymap, case_insensitive, args)
+	local added_bindings = {}
+	for _, binding in ipairs(keymap) do
+		if type(binding[1]) ~= "table" then
+			if case_insensitive then
+				binding[1] = string.lower(binding[1])
+				table.insert(binding, 1, {} )
+				table.insert(added_bindings, {{'Shift'}, string.upper(binding[1]), binding[2], binding[3]})
+			elseif isupper(binding[1]) then
+				binding[1] = string.lower(binding[1])
+				table.insert(binding, 1, {'Shift'} )
+			else
+				table.insert(binding, 1, {} )
+			end
+		elseif gears.table.hasitem(binding[1], 'Shift') and #binding[2] == 1 then
+			binding[2] = string.upper(binding[2])
+		end
+	end
+	local all = gears.table.join(keymap, added_bindings)
+	if args then
+		for _, binding in ipairs(all) do
+			local origfunc = binding[3]
+			binding[3] = function() origfunc(args) end
+		end
+	end
+	return all
+end
+
+local function generate_stop_keys(keymap, stay_in_mode)
+	stop_keys = {}
+	for _, binding in ipairs(keymap) do
+		if (not stay_in_mode and not binding.stay_in_mode)
+			or (stay_in_mode and binding.stay_in_mode == false) then
+			table.insert(stop_keys, binding[2])
+		end
+	end
+	if next(stop_keys) == nil then
+		stop_keys = {"Escape"}
+	end
+	return stop_keys
+end
+
+local function without_separators(keymap)
+	local clean = {}
+	for k, v in pairs(keymap) do
+		if not (type(v) == 'table' and v[1] == "separator") then
+			clean[k] = v
+		end
+	end
+	return clean
+end
+
 function modalbind.grab(options)
 	local keymap = merge_default_keys(options.keymap or {})
 	local name = options.name
-	local stay_in_mode = options.stay_in_mode or false
 	local args = options.args
 	local layout = options.layout
 	local use_lower = options.case_insensitive or false
+	local onOpen = options.onOpen
+	local onClose = options.onClose
+
+	keymap = adapt_to_keygrabber(keymap)
 
 	layout_swap(layout)
+
 	if name then
 		if settings.show_default_options then
 			show_box(mouse.screen, keymap, name)
 		else
 			show_box(mouse.screen, options.keymap, name)
 		end
-		nesting = nesting + 1
 	end
-	call_key_if_present(keymap, "onOpen", args, use_lower)
 
-	keygrabber.run(function(mod, key, event)
-		if event == "release" then return true end
+	if onOpen ~= nil then
+		onOpen(args)
+	end
 
-		mapping = mapping_for(keymap, key, use_lower)
-		if mapping then
-			if (mapping[2] == close_box or
-				mapping[2] == modalbind.close_box) then
-				close_box(keymap, args)
-				return true
-			end
+	keymap = without_separators(keymap)
 
-			keygrabber.stop()
-			mapping[2](args)
+	stop_keys = generate_stop_keys(keymap, options.stay_in_mode or false)
 
-			-- mapping "stay_in_mode" takes precedence over mode-wide setting
-			if mapping["stay_in_mode"] ~= nil then
-				stay_in_mode = mapping["stay_in_mode"]
-			end
-
-			if stay_in_mode then
-				modalbind.grab{keymap = keymap,
-					name = name,
-					stay_in_mode = true,
-					args = args,
-					use_lower=use_lower}
-			else
-				nesting = nesting - 1
-				if nesting < 1 then hide_box() end
+	grabber = awful.keygrabber {
+    keybindings = keymap,
+		stop_key = stop_keys,
+		stop_event = 'release',
+		stop_callback = function(self)
+			if active_grabber.name == self.name then
+				if onClose ~= nil then
+					onClose(args)
+				end
 				layout_return()
-				return true
+				hide_box()
+				active_grabber = nil
+			else
+				active_grabber()
 			end
-		else
-			if verbose then
-				print("Unmapped key: \"" .. key .. "\"")
-			end
-		end
-
-		return true
-	end)
+		end,
+	}
+	grabber.name = name
+	active_grabber = grabber
+	grabber()
 end
 
 function modalbind.grabf(options)
@@ -314,11 +323,6 @@ end
 ---  disable displaying bindings for current mode
 function modalbind.hide_default_options()
 	settings.show_default_options = false
-end
-
----  set key aliases table
-function modalbind.set_aliases(t)
-	aliases = t
 end
 
 return modalbind
