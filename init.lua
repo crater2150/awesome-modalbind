@@ -92,8 +92,8 @@ local function show_box(s, map, name)
 	local label = "<big><b>" .. name .. "</b></big>"
 	if settings.show_options then
 		for _, mapping in ipairs(map) do
-			if mapping[2] == "separator" then
-				label = label .. "\n\n<big>" .. mapping[3] .. "</big>"
+			if mapping[1] == "separator" then
+				label = label .. "\n\n<big>" .. mapping[2] .. "</big>"
 			else
 				label = label .. "\n<b>" .. table.concat(mapping[1], "+") ..
 					(next(mapping[1]) ~= nil and "+" or "") .. mapping[2] .. "</b>\t" .. (mapping[4] or "???")
@@ -165,7 +165,9 @@ local function adapt_to_keygrabber(keymap, case_insensitive, args)
 	local added_bindings = {}
 	for _, binding in ipairs(keymap) do
 		if type(binding[1]) ~= "table" then
-			if case_insensitive then
+			if binding[1] == 'separator' then
+				-- ignore separators
+			elseif case_insensitive then
 				binding[1] = string.lower(binding[1])
 				table.insert(binding, 1, {} )
 				table.insert(added_bindings, {{'Shift'}, string.upper(binding[1]), binding[2], binding[3]})
